@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EVENT SCOREBOARD // 8-BIT EDITION</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0d0221;
+    --bg2: #1a0b3d;
+    --panel: #14082e;
+    --panel-border: #ff2e63;
+    --accent: #08f7fe;
+    --accent2: #f9f871;
+    --accent3: #7cfc7c;
+    --text: #f1f1f1;
+    --shadow: #ff2e63;
+    --row-a: #1a0b3d;
+    --row-b: #150a30;
+  }
+
+  * { box-sizing: border-box; }
+
+  html,body{
+    margin:0;
+    padding:0;
+    background:
+      repeating-linear-gradient(0deg, rgba(255,255,255,0.03) 0px, rgba(255,255,255,0.03) 1px, transparent 1px, transparent 3px),
+      radial-gradient(circle at 50% 0%, var(--bg2) 0%, var(--bg) 70%);
+    color: var(--text);
+    font-family: 'Press Start 2P', monospace;
+    min-height: 100vh;
+  }
+
+  .crt-overlay{
+    pointer-events:none;
+    position:fixed;
+    inset:0;
+    background: repeating-linear-gradient(
+      to bottom,
+      rgba(0,0,0,0.15) 0px,
+      rgba(0,0,0,0.15) 1px,
+      transparent 2px,
+      transparent 4px
+    );
+    z-index: 999;
+    mix-blend-mode: multiply;
+  }
+
+  header{
+    text-align:center;
+    padding: 28px 12px 20px;
+  }
+
+  h1{
+    font-size: 20px;
+    color: var(--accent2);
+    text-shadow:
+      3px 3px 0 var(--shadow),
+      -2px -2px 0 var(--accent);
+    letter-spacing: 2px;
+    margin: 0 0 10px;
+    animation: flicker 3.5s infinite;
+  }
+
+  h1 .coin{
+    display:inline-block;
+    animation: spin 1.6s steps(4) infinite;
+  }
+
+  @keyframes spin{
+    0%{ transform: scaleX(1); }
+    50%{ transform: scaleX(0.2); }
+    100%{ transform: scaleX(1); }
+  }
+
+  @keyframes flicker{
+    0%, 96%, 100% { opacity: 1; }
+    97% { opacity: 0.7; }
+    98% { opacity: 1; }
+  }
+
+  .subtitle{
+    font-size: 9px;
+    color: var(--accent);
+    letter-spacing: 1px;
+  }
+
+  .marquee-wrap{
+    border-top: 4px solid var(--panel-border);
+    border-bottom: 4px solid var(--panel-border);
+    background: #000;
+    padding: 6px 0;
+    overflow: hidden;
+    white-space: nowrap;
+    margin-bottom: 24px;
+  }
+
+  .marquee{
+    display:inline-block;
+    padding-left: 100%;
+    font-size: 9px;
+    color: var(--accent3);
+    animation: scroll-left 18s linear infinite;
+  }
+
+  @keyframes scroll-left{
+    from { transform: translateX(0); }
+    to { transform: translateX(-100%); }
+  }
+
+  main{
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 16px 60px;
+  }
+
+  .board{
+    border: 4px solid var(--panel-border);
+    box-shadow: 0 0 0 4px #000, 0 0 24px rgba(255,46,99,0.4);
+    background: var(--panel);
+    padding: 4px;
+  }
+
+  .row{
+    display: grid;
+    grid-template-columns: 110px 1fr 1.4fr;
+    gap: 4px;
+    align-items: stretch;
+    background: var(--row-a);
+    border-bottom: 2px dashed rgba(255,255,255,0.08);
+  }
+
+  .row:nth-child(even){ background: var(--row-b); }
+
+  .row.head{
+    background: var(--panel-border);
+    color: #000;
+    position: sticky;
+    top: 0;
+    z-index: 5;
+  }
+
+  .row.head > div{
+    font-size: 10px;
+    padding: 12px 8px;
+    text-align: center;
+    letter-spacing: 1px;
+  }
+
+  .row:not(.head):hover{
+    background: #2a1250;
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+  }
+
+  .cell{
+    padding: 10px 8px;
+    display:flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .cell.img-cell{
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+  }
+
+  .sprite-box{
+    width: 84px;
+    height: 84px;
+    background: #000;
+    border: 3px solid var(--accent);
+    box-shadow: 3px 3px 0 var(--shadow);
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    overflow:hidden;
+  }
+
+  .sprite-box img{
+    width:100%;
+    height:100%;
+    object-fit: cover;
+    image-rendering: pixelated;
+  }
+
+  .sprite-fallback{
+    font-size: 9px;
+    color: var(--accent2);
+    text-align:center;
+    line-height:1.5;
+    padding: 4px;
+  }
+
+  .event-name{
+    font-size: 11px;
+    color: var(--accent2);
+    text-shadow: 2px 2px 0 #000;
+    margin-bottom: 8px;
+    line-height:1.4;
+  }
+
+  .tag{
+    display:inline-block;
+    font-size: 8px;
+    padding: 4px 6px;
+    margin: 2px 4px 2px 0;
+    border: 2px solid;
+    width: fit-content;
+    letter-spacing: 0.5px;
+  }
+
+  .tag.category{
+    color: var(--accent);
+    border-color: var(--accent);
+    background: rgba(8,247,254,0.08);
+  }
+
+  .tag.eventtype{
+    color: var(--accent3);
+    border-color: var(--accent3);
+    background: rgba(124,252,124,0.08);
+  }
+
+  .scoring{
+    font-size: 9.5px;
+    line-height: 1.8;
+    color: var(--text);
+  }
+
+  footer{
+    text-align:center;
+    padding: 30px 10px 50px;
+    font-size: 8px;
+    color: var(--accent);
+    letter-spacing: 1px;
+  }
+
+  .press-start{
+    text-align:center;
+    margin: 20px 0;
+    font-size: 10px;
+    color: var(--accent2);
+    animation: flicker 1.2s infinite;
+  }
+
+  @media (max-width: 700px){
+    h1{ font-size: 26px; }
+    .subtitle{ font-size: 13px; }
+    .marquee{ font-size: 13px; }
+    .row.head > div{ font-size: 14px; padding: 16px 8px; }
+
+    .row{ grid-template-columns: 100px 1fr; }
+    .row.head .cell:nth-child(3){ display:none; }
+    .cell.scoring-cell{
+      grid-column: 1 / -1;
+      border-top: 2px dashed rgba(255,255,255,0.08);
+    }
+    .sprite-box{ width:92px; height:92px; }
+
+    .event-name{ font-size: 16px; }
+    .tag{ font-size: 12px; padding: 6px 8px; }
+    .scoring{ font-size: 13px; line-height: 1.7; }
+  }
+</style>
+</head>
+<body>
+<div class="crt-overlay"></div>
+
+<header>
+  <h1><span class="coin">&#9673;</span> EVENT BREAKDOWN <span class="coin">&#9673;</span></h1>
+  <div class="subtitle">&#9654; EVENT INFO // EVENT SCORING &#9664;</div>
+</header>
+
+<div class="marquee-wrap">
+  <div class="marquee">PENIS SIZE &nbsp;&#9670;&nbsp; SPEED &nbsp;&#9670;&nbsp; STRENGTH &nbsp;&#9670;&nbsp; DEXTERITY &nbsp;&#9670;&nbsp; GAMING &nbsp;&#9670;&nbsp; DRIVING &nbsp;&#9670;&nbsp; </div>
+</div>
+
+<main>
+  <div class="board" id="board">
+    <div class="row head">
+      <div class="cell">IMAGE</div>
+      <div class="cell">EVENT INFO</div>
+      <div class="cell">SCORING</div>
+    </div>
+    <!-- rows injected by JS -->
+  </div>
+</main>
+
+<script>
+  const events = [
+    { name: "Beers Drank", category: "Penis Size", type: "Individual", scoring: "10 points per beer. If Player pisses on floor, all JP bets are forfeited and 200 points subtracted" },
+    { name: "40 Yard Dash", category: "Speed", type: "Individual", scoring: "Points scored on range 4.97s - 6.97s (Jameis 40 time)" },
+    { name: "Sling Pigskin", category: "Strength", type: "Individual", scoring: "Points scored on range 25yds - 55yds (Marc Bulger Pro Bowl)" },
+    { name: "Football Accuracy", category: "Dexterity", type: "Individual", scoring: "Points scored on targets hit (tbd)" },
+    { name: "Punting", category: "Strength", type: "Individual", scoring: "Points scored on range 27yds - 65yds (Vandy girl kicker to Touchback)" },
+    { name: "Kicking", category: "Strength", type: "Individual", scoring: "Points scored on range 27yds - 65yds (Vandy girl kicker to Touchback)" },
+    { name: "Long Drive", category: "Strength", type: "Individual", scoring: "Points scored on range 150yds - 290yds (LPGA longest drive)" },
+    { name: "Free Throws", category: "Dexterity", type: "Individual", scoring: "Points based on percentage of FT made" },
+    { name: "Mile Run", category: "Speed", type: "Individual", scoring: "Point based on range 6:00 - 12:00 (Any incomplete laps = +3:00)" },
+    { name: "3 Point Contest", category: "Dexterity", type: "Individual", scoring: "Points based on range 0 - 16 made 3pt (Kyle Korver 3pt Contest)" },
+    { name: "College Football", category: "Penis Size", type: "Individual", scoring: "25% pts based on yds, 25% pts based n TDs, 5 pts for wins, bonus points available" },
+    { name: "Turok", category: "Gaming", type: "Groups", scoring: "50% Average Placement, 50% Kills (Max 20)" },
+    { name: "Godzilla Unleashed", category: "Gaming", type: "Bracket", scoring: "70 pts for first, -10 for each place after. 5 pts for each kill (Bracket, top 2 performaces tracked)" },
+    { name: "Battlefront II", category: "Gaming", type: "1 vs 1", scoring: "20 pts each win, .75 pts for each kill" },
+    { name: "Nascar Thunder 2004", category: "Driving", type: "Individual", scoring: "4 pts for each DNF" },
+    { name: "Attack of the Twonkies", category: "Speed", type: "Speedrun", scoring: "Points scored on range 5:45 - 8:45 (WR)" },
+    { name: "SW Bombad Racing", category: "Driving", type: "Groups", scoring: "50 pts for first, -7 for each place after. 50 pts for range 2:00 - 3:30" },
+    { name: "WWE Smackdown Vs Raw 2007", category: "Gaming", type: "Groups", scoring: "60 pts for first, -15 for each place after. 10 pts for each KO" },
+    { name: "Yu-Gi-Oh", category: "Penis Size", type: "Pack Opening", scoring: "Highest value card * 4" },
+    { name: "GTA Guesser", category: "Penis Size", type: "Individual", scoring: "Points scored on range 5000 - 25000" },
+    { name: "Skyrim Guesser", category: "Penis Size", type: "Individual", scoring: "Points scored on range 5000 - 25000" },
+    { name: "Kung Fu Panda", category: "Gaming", type: "Groups/Bracket", scoring: "70 pts for first, -10 for each place after. 2.5 pts for each kill (Bracket, top 2 performaces tracked)" },
+    { name: "Smash", category: "Gaming", type: "Groups/Bracket", scoring: "70 pts for first, -10 for each place after. 2.5 pts for each kill (Bracket, top 2 performaces tracked)" },
+    { name: "Super Mario Strikers", category: "Gaming", type: "Teams", scoring: "15 pts for win, 50 pts for highest goals, 20 pts for highest awards" },
+    { name: "Mario Kart", category: "Driving", type: "Groups", scoring: "Points scored on range 0 - 60 (Highest score)" },
+    { name: "Mario Party", category: "Gaming", type: "Groups", scoring: "20 points per star, .5 point per coin" },
+    { name: "Quiplash", category: "Penis Size", type: "Individual", scoring: "Points based relative to max score" },
+    { name: "Beer Pong", category: "Dexterity", type: "Teams", scoring: "60 pts for first, -10 for each place after. 4 pts per cup hit" },
+    { name: "Poker", category: "Penis Size", type: "Individual", scoring: "Points based on final chips" },
+    { name: "COD Kills", category: "Gaming", type: "Individual", scoring: "Points directly related to kills within 3 min" },
+    { name: "JP Evolution", category: "Penis Size", type: "Betting", scoring: "Points based on bets" }
+  ];
+
+  const board = document.getElementById('board');
+
+  const imageMap = {
+    'beers drank': 'Event Images/Beers_Drank.gif',
+    'yu-gi-oh': 'Event Images/Yu-Gi-Oh.webp',
+    '40 yard dash': 'Event Images/40_Yard_Dash.gif',
+    'sling pigskin': 'Event Images/Sling_Pigskin.jpg',
+    'football accuracy': 'Event Images/Football_Accuracy.jpg',
+    'punting': 'Event Images/Punting.jpg',
+    'kicking': 'Event Images/Kicking.gif',
+    'long drive': 'Event Images/Long_Drive.gif',
+    'free throws': 'Event Images/Free_Throws.jpg',
+    'mile run': 'Event Images/Mile_Run.png',
+    '3 point contest': 'Event Images/3_Point_Contest.jpg',
+    'college football': 'Event Images/College_Football.jpg',
+    'turok': 'Event Images/Turok.jpg',
+    'godzilla unleashed': 'Event Images/Godzilla_Unleashed.png',
+    'battlefront ii': 'Event Images/Battlefront_II.png',
+    'nascar thunder 2004': 'Event Images/Nascar_Thunder_2004.png',
+    'sw bombad racing': 'Event Images/SW_Bombad_Racing.jpg',
+    'wwe smackdown vs raw 2007': 'Event Images/WWE_Smackdown_Vs_Raw_2007.jpg',
+    'beyblade v force': 'Event Images/Beyblade_V_Force.png',
+    'gta guesser': 'Event Images/GTA_Guesser.png',
+    'skyrim guesser': 'Event Images/Skyrim_Guesser.png',
+    'smash': 'Event Images/Smash.png',
+    'super mario strikers': 'Event Images/Super_Mario_Strikers_Cover.png',
+    'mario kart': 'Event Images/Mario_Kart.jpg',
+    'mario party': 'Event Images/Mario_Party.jpg',
+    'quiplash': 'Event Images/Quiplash.jpg',
+    'beer pong': 'Event Images/Beer_Pong.png',
+    'poker': 'Event Images/Poker.png',
+    'cod kills': 'Event Images/Cod_Kills.jpg',
+    'jp evolution': 'Event Images/JP_Evolution.png',
+    'jimmy neutron: attack of the twonkies': 'Event Images/Attack_of_the_Twonkies.png',
+    'attack of the twonkies': 'Event Images/Attack_of_the_Twonkies.png',
+    'kung fu panda': 'Event Images/Kung_Fu_Panda.jpg'
+  };
+
+  events.forEach(ev => {
+    const row = document.createElement('div');
+    row.className = 'row';
+
+    const key = ev.name.toLowerCase();
+    const imgPath = imageMap[key] || `Event Images/${ev.name}.png`;
+
+    row.innerHTML = `
+      <div class="cell img-cell">
+        <div class="sprite-box">
+          <img src="${imgPath}" alt="${ev.name}"
+               onerror="this.onerror=null; this.replaceWith(Object.assign(document.createElement('div'), {className:'sprite-fallback', innerText:'NO\\nIMG'}));">
+        </div>
+      </div>
+      <div class="cell">
+        <div class="event-name">${ev.name}</div>
+        <span class="tag category">${ev.category}</span>
+        <span class="tag eventtype">${ev.type}</span>
+      </div>
+      <div class="cell scoring-cell">
+        <div class="scoring">${ev.scoring}</div>
+      </div>
+    `;
+
+    board.appendChild(row);
+  });
+</script>
+
+</body>
+</html>
